@@ -1,1 +1,305 @@
 
+
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>雨夜街角便利店</title>
+
+<style>
+
+*{margin:0;padding:0}
+
+body{overflow:hidden;background:#07111e;font-family:sans-serif}
+
+canvas{display:block}
+
+#tip{
+
+position:fixed;bottom:20px;left:0;width:100%;
+
+text-align:center;color:#dceaff;font-size:13px;
+
+pointer-events:none
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="tip">雨夜街角 · 拖动旋转 · 双指缩放</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+
+const scene = new THREE.Scene();
+
+scene.background = new THREE.Color(0x07111e);
+
+scene.fog = new THREE.Fog(0x07111e, 12, 35);
+
+const camera = new THREE.PerspectiveCamera(
+
+50, window.innerWidth/window.innerHeight, 0.1, 100
+
+);
+
+camera.position.set(9,8,12);
+
+const renderer = new THREE.WebGLRenderer({antialias:true});
+
+renderer.setSize(window.innerWidth,window.innerHeight);
+
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+
+renderer.shadowMap.enabled = true;
+
+document.body.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera,renderer.domElement);
+
+controls.enableDamping = true;
+
+controls.maxPolarAngle = Math.PI/2.05;
+
+controls.minDistance = 6;
+
+controls.maxDistance = 24;
+
+scene.add(new THREE.AmbientLight(0x7890b5,0.7));
+
+const moon = new THREE.DirectionalLight(0x9bbcff,1.1);
+
+moon.position.set(-5,10,5);
+
+scene.add(moon);
+
+function box(w,h,d,x,y,z,color){
+
+const mesh = new THREE.Mesh(
+
+new THREE.BoxGeometry(w,h,d),
+
+new THREE.MeshStandardMaterial({color,roughness:0.35})
+
+);
+
+mesh.position.set(x,y,z);
+
+mesh.castShadow=true;
+
+mesh.receiveShadow=true;
+
+scene.add(mesh);
+
+return mesh;
+
+}
+
+// 湿润街道
+
+box(30,0.2,30,0,-0.2,0,0x182633);
+
+// 便利店主体
+
+box(7,4,5,0,2,0,0x273847);
+
+box(7.2,0.25,5.2,0,4.1,0,0x101b28);
+
+// 便利店玻璃门窗
+
+box(5.8,2.5,0.12,0,2.1,2.57,0x8a9ca0);
+
+// 店内暖色灯光
+
+const warm = new THREE.PointLight(0xffb75e,4,12);
+
+warm.position.set(0,2.5,1.8);
+
+scene.add(warm);
+
+// 店内货架
+
+box(3.5,0.15,0.5,0,1.1,2.2,0x79563d);
+
+box(3.5,0.15,0.5,0,2,2.2,0x79563d);
+
+// 门
+
+box(1.1,2.3,0.15,2.2,1.5,2.68,0x344957);
+
+// 招牌底板
+
+box(5.5,0.65,0.15,0,3.65,2.7,0x172c39);
+
+// 发光招牌
+
+const sign = box(4.8,0.38,0.08,0,3.65,2.8,0xffc66e);
+
+const signLight = new THREE.PointLight(0xffb94f,2,7);
+
+signLight.position.set(0,4,3.2);
+
+scene.add(signLight);
+
+// 路灯
+
+box(0.12,4,0.12,-5,2,1,0x263444);
+
+const lamp = new THREE.PointLight(0xffd28a,2.5,8);
+
+lamp.position.set(-5,4,1);
+
+scene.add(lamp);
+
+// 路边建筑
+
+box(3,5,4,7,2.5,-2,0x182532);
+
+box(3,4,4,-8,2,-3,0x1b2a39);
+
+// 自动售货机
+
+box(1.1,2.1,0.8,-4,1,3,0x263f55);
+
+box(0.8,1.2,0.08,-4,1.1,3.43,0x9ab6c5);
+
+// 垃圾桶
+
+box(0.7,0.8,0.7,4,0.4,4,0x263342);
+
+// 路面反光小水洼
+
+for(let i=0;i<18;i++){
+
+const puddle = new THREE.Mesh(
+
+new THREE.CircleGeometry(0.3+Math.random()*0.6,24),
+
+new THREE.MeshBasicMaterial({
+
+color:0x53758b,transparent:true,opacity:0.18
+
+})
+
+);
+
+puddle.rotation.x=-Math.PI/2;
+
+puddle.position.set(
+
+(Math.random()-0.5)*16, -0.085,
+
+(Math.random()-0.5)*13
+
+);
+
+scene.add(puddle);
+
+}
+
+// 雨滴
+
+const count=1800;
+
+const positions=new Float32Array(count*3);
+
+for(let i=0;i<count;i++){
+
+positions[i*3]=(Math.random()-0.5)*22;
+
+positions[i*3+1]=Math.random()*12;
+
+positions[i*3+2]=(Math.random()-0.5)*22;
+
+}
+
+const rainGeometry=new THREE.BufferGeometry();
+
+rainGeometry.setAttribute(
+
+'position',new THREE.BufferAttribute(positions,3)
+
+);
+
+const rainMaterial=new THREE.PointsMaterial({
+
+color:0x9abbd7,size:0.045,transparent:true,opacity:0.7
+
+});
+
+const rain=new THREE.Points(rainGeometry,rainMaterial);
+
+scene.add(rain);
+
+// 远处路灯光晕
+
+const glow=new THREE.PointLight(0x537da8,1.5,10);
+
+glow.position.set(5,3,-5);
+
+scene.add(glow);
+
+// 动画
+
+function animate(){
+
+requestAnimationFrame(animate);
+
+const p=rainGeometry.attributes.position.array;
+
+for(let i=0;i<count;i++){
+
+p[i*3+1]-=0.16;
+
+p[i*3]-=0.025;
+
+if(p[i*3+1]<0){
+
+p[i*3+1]=12;
+
+p[i*3]=(Math.random()-0.5)*22;
+
+p[i*3+2]=(Math.random()-0.5)*22;
+
+}
+
+}
+
+rainGeometry.attributes.position.needsUpdate=true;
+
+controls.update();
+
+renderer.render(scene,camera);
+
+}
+
+animate();
+
+window.addEventListener('resize',()=>{
+
+camera.aspect=window.innerWidth/window.innerHeight;
+
+camera.updateProjectionMatrix();
+
+renderer.setSize(window.innerWidth,window.innerHeight);
+
+});
+
+</script>
+
+</body>
+
+</html>
